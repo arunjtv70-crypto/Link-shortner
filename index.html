@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AB URL Shortener — AB GROUPS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050A14;
+    --surface: #0D1525;
+    --surface2: #111D35;
+    --border: #1E2F50;
+    --accent: #00C2FF;
+    --accent2: #7B5CF5;
+    --gold: #F5A623;
+    --green: #00E67A;
+    --red: #FF4D6A;
+    --text: #E8F0FF;
+    --muted: #5A7099;
+    --card: rgba(13,21,37,0.95);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated BG */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 20% 20%, rgba(0,194,255,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(123,92,245,0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(245,166,35,0.03) 0%, transparent 50%);
+    animation: bgPulse 8s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes bgPulse {
+    0% { transform: translate(0,0) scale(1); }
+    100% { transform: translate(-2%, 2%) scale(1.05); }
+  }
+
+  .grid-lines {
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(rgba(0,194,255,0.025) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0,194,255,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 20px 120px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 32px 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-badge {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: white;
+    box-shadow: 0 0 20px rgba(0,194,255,0.3);
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text);
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0.05em;
+  }
+
+  .header-tag {
+    background: rgba(0,230,122,0.1);
+    border: 1px solid rgba(0,230,122,0.3);
+    color: var(--green);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 30px 0 28px;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  /* SHORTENER CARD */
+  .shortener-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shortener-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--gold));
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .url-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .url-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,194,255,0.1);
+  }
+
+  .url-input::placeholder { color: var(--muted); }
+
+  .shorten-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    padding: 14px 24px;
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    box-shadow: 0 4px 20px rgba(0,194,255,0.3);
+  }
+
+  .shorten-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(0,194,255,0.45); }
+  .shorten-btn:active { transform: scale(0.97); }
+  .shorten-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* RESULT */
+  .result-box {
+    display: none;
+    background: rgba(0,230,122,0.05);
+    border: 1px solid rgba(0,230,122,0.25);
+    border-radius: 14px;
+    padding: 18px 20px;
+    animation: slideUp 0.3s ease;
+  }
+
+  .result-box.show { display: block; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .result-label::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 1s ease infinite;
+  }
+
+  .result-link-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .short-link {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .short-link:hover { text-decoration: underline; }
+
+  .action-btn {
+    border: none;
+    border-radius: 9px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .copy-btn {
+    background: rgba(0,194,255,0.12);
+    border: 1px solid rgba(0,194,255,0.3);
+    color: var(--accent);
+  }
+
+  .copy-btn:hover { background: rgba(0,194,255,0.22); }
+  .copy-btn.copied { background: rgba(0,230,122,0.15); border-color: rgba(0,230,122,0.4); color: var(--green); }
+
+  .open-btn {
+    background: rgba(123,92,245,0.12);
+    border: 1px solid rgba(123,92,245,0.3);
+    color: var(--accent2);
+  }
+
+  .open-btn:hover { background: rgba(123,92,245,0.22); }
+
+  /* LOADING */
+  .loading {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .loading.show { display: flex; }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ERROR */
+  .error-box {
+    display: none;
+    background: rgba(255,77,106,0.07);
+    border: 1px solid rgba(255,77,106,0.25);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--red);
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  .error-box.show { display: block; }
+
+  /* HISTORY */
+  .history-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .clear-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .history-empty {
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    animation: slideUp 0.3s ease;
+    transition: border-color 0.2s;
+  }
+
+  .history-item:hover { border-color: var(--accent); }
+  .history-item:last-child { margin-bottom: 0; }
+
+  .history-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .history-urls {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .history-short {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .history-short:hover { text-decoration: underline; }
+
+  .history-orig {
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+
+  .history-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .h-btn {
+    border: none;
+    border-radius: 7px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .h-copy {
+    background: rgba(0,194,255,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0,194,255,0.2);
+  }
+
+  .h-copy:hover { background: rgba(0,194,255,0.2); }
+  .h-copy.copied { background: rgba(0,230,122,0.15); color: var(--green); border-color: rgba(0,230,122,0.3); }
+
+  .h-open {
+    background: rgba(123,92,245,0.1);
+    color: var(--accent2);
+    border: 1px solid rgba(123,92,245,0.2);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .h-open:hover { background: rgba(123,92,245,0.2); }
+
+  /* ===== AB EDUCATION ADS ===== */
+
+  /* AD CONTAINER - fixed bottom */
+  .ad-container {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  .ad-wrapper {
+    pointer-events: all;
+    position: relative;
+  }
+
+  /* Progress bar */
+  .ad-progress {
+    height: 2px;
+    background: rgba(255,255,255,0.1);
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+  }
+
+  .ad-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--accent));
+    width: 100%;
+    transform-origin: left;
+    transition: transform 0.5s linear;
+  }
+
+  .ad-skip {
+    position: absolute;
+    top: 8px; right: 10px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.7);
+    border-radius: 6px;
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+    z-index: 10;
+  }
+
+  .ad-skip:hover { background: rgba(0,0,0,0.8); color: white; }
+
+  /* AD TYPES */
+  .ad { display: none; }
+  .ad.active { display: block; }
+
+  /* 1. Banner Strip */
+  .ad-banner {
+    background: linear-gradient(90deg, #1a0a2e, #0d1a3a, #0a2818);
+    border-top: 2px solid var(--gold);
+    padding: 10px 60px 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .ad-banner-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ad-banner-text .ab-logo {
+    background: linear-gradient(135deg, var(--gold), #FF6B35);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+    font-size: 15px;
+  }
+
+  .ad-enroll-btn {
+    background: linear-gradient(135deg, var(--gold), #FF6B35);
+    border: none;
+    border-radius: 8px;
+    padding: 7px 18px;
+    color: white;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 3px 12px rgba(245,166,35,0.4);
+  }
+
+  .ad-enroll-btn:hover { transform: scale(1.05); box-shadow: 0 5px 18px rgba(245,166,35,0.6); }
+
+  /* 2. Feature Card */
+  .ad-feature {
+    background: linear-gradient(135deg, #0d1a3a 0%, #1a0a2e 50%, #0a1a12 100%);
+    border-top: 2px solid transparent;
+    border-image: linear-gradient(90deg, var(--gold), var(--accent2), var(--green)) 1;
+    padding: 16px 60px 16px 20px;
+  }
+
+  .ad-feature-inner {
+    max-width: 780px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .ad-feature-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--gold), #FF6B35);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .ad-feature-body { flex: 1; }
+
+  .ad-feature-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .ad-feature-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 2px 9px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+
+  .chip.gold { border-color: rgba(245,166,35,0.4); color: var(--gold); background: rgba(245,166,35,0.08); }
+  .chip.green { border-color: rgba(0,230,122,0.3); color: var(--green); background: rgba(0,230,122,0.07); }
+  .chip.blue { border-color: rgba(0,194,255,0.3); color: var(--accent); background: rgba(0,194,255,0.07); }
+
+  /* 3. Alert Ticker */
+  .ad-ticker {
+    background: linear-gradient(90deg, #1a0500, #2d0d00, #1a0500);
+    border-top: 2px solid var(--red);
+    padding: 10px 60px 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .ticker-badge {
+    background: var(--red);
+    color: white;
+    font-weight: 800;
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    animation: urgentPulse 0.8s ease infinite alternate;
+  }
+
+  @keyframes urgentPulse {
+    from { box-shadow: 0 0 6px rgba(255,77,106,0.5); }
+    to { box-shadow: 0 0 16px rgba(255,77,106,0.9); }
+  }
+
+  .ticker-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    flex: 1;
+  }
+
+  .ticker-text span { color: var(--red); }
+
+  /* 4. Ribbon Ad */
+  .ad-ribbon {
+    background: linear-gradient(90deg, #0a1a0e, #0d2418, #0a1a0e);
+    border-top: 2px solid var(--green);
+    padding: 9px 60px 9px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .ribbon-icon { font-size: 18px; }
+
+  .ribbon-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .ribbon-text em {
+    font-style: normal;
+    color: var(--green);
+    font-weight: 800;
+  }
+
+  .ribbon-btn {
+    background: var(--green);
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    color: #000;
+    font-weight: 800;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .ribbon-btn:hover { transform: scale(1.05); }
+
+  /* 5. Full Popup */
+  .ad-popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(5,10,20,0.92);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeInPop 0.4s ease;
+  }
+
+  .ad-popup.show { display: flex; }
+
+  @keyframes fadeInPop {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .popup-card {
+    background: linear-gradient(135deg, #0d1a3a, #1a0a2e);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 24px;
+    padding: 40px 36px;
+    max-width: 480px;
+    width: 90%;
+    position: relative;
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(245,166,35,0.1);
+    animation: scaleInPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes scaleInPop {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .popup-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.6);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+
+  .popup-close:hover { background: rgba(255,77,106,0.2); color: var(--red); border-color: var(--red); }
+
+  .popup-emoji { font-size: 48px; margin-bottom: 12px; }
+
+  .popup-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, var(--gold), #FF6B35);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .popup-sub {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .popup-feats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  .popup-feat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .popup-feat-icon {
+    width: 22px; height: 22px;
+    background: rgba(245,166,35,0.15);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .popup-cta {
+    background: linear-gradient(135deg, var(--gold), #FF6B35);
+    border: none;
+    border-radius: 12px;
+    padding: 14px 32px;
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    box-shadow: 0 6px 24px rgba(245,166,35,0.4);
+    letter-spacing: 0.02em;
+  }
+
+  .popup-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(245,166,35,0.6); }
+
+  .popup-disclaimer {
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 12px;
+  }
+
+  /* Stats strip */
+  .stats-strip {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-box {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+  }
+
+  .stat-lbl {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: var(--green);
+    color: #000;
+    padding: 10px 22px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 13px;
+    z-index: 9999;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 500px) {
+    .input-row { flex-direction: column; }
+    .result-link-row { flex-wrap: wrap; }
+    .stats-strip { gap: 8px; }
+    .ad-feature-chips { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-lines"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ Copied!</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-badge">AB</div>
+      <div>
+        <div class="logo-text">AB GROUPS</div>
+        <div class="logo-sub">URL Shortener</div>
+      </div>
+    </div>
+    <div class="header-tag">● LIVE API</div>
+  </header>
+
+  <div class="hero">
+    <h1>Shorten Any URL<br>Instantly</h1>
+    <p>Real TinyURL API — generates actual tinyurl.com links that work everywhere</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-strip">
+    <div class="stat-box">
+      <span class="stat-val" id="statCount">0</span>
+      <span class="stat-lbl">Links Created</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-val">TinyURL</span>
+      <span class="stat-lbl">API Engine</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-val">100%</span>
+      <span class="stat-lbl">Real Links</span>
+    </div>
+  </div>
+
+  <!-- SHORTENER -->
+  <div class="shortener-card">
+    <div class="input-row">
+      <input type="url" class="url-input" id="urlInput" placeholder="https://your-long-url.com/paste/here..." />
+      <button class="shorten-btn" id="shortenBtn" onclick="shortenURL()">⚡ Shorten</button>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <span>Calling TinyURL API...</span>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-label">Short Link Ready</div>
+      <div class="result-link-row">
+        <a class="short-link" id="shortLink" href="#" target="_blank" rel="noopener">#</a>
+        <button class="action-btn copy-btn" id="copyBtn" onclick="copyLink()">📋 Copy</button>
+        <button class="action-btn open-btn" id="openBtn" onclick="openLink()">↗ Open</button>
+      </div>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="history-card">
+    <div class="section-title">
+      <span>History</span>
+      <button class="clear-btn" onclick="clearHistory()">Clear All</button>
+    </div>
+    <div id="historyList">
+      <div class="history-empty" id="historyEmpty">No links yet. Shorten your first URL above!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AD SYSTEM ===== -->
+<div class="ad-container" id="adContainer" style="display:none;">
+  <div class="ad-wrapper" id="adWrapper">
+
+    <!-- AD SKIP BTN -->
+    <button class="ad-skip" onclick="nextAd()" title="Next Ad">✕</button>
+
+    <!-- AD 1: Banner Strip -->
+    <div class="ad" id="ad1">
+      <div class="ad-banner">
+        <div class="ad-banner-text">
+          <span class="ab-logo">🎓 AB Education</span>
+          <span style="color:rgba(255,255,255,0.6);">—</span>
+          <span>Top-Ranked Courses | 100% Placement Support | Enroll Now!</span>
+        </div>
+        <a href="#" class="ad-enroll-btn" onclick="adClick(event)">Enroll Now →</a>
+      </div>
+      <div class="ad-progress"><div class="ad-progress-fill" id="prog1"></div></div>
+    </div>
+
+    <!-- AD 2: Feature Card -->
+    <div class="ad" id="ad2">
+      <div class="ad-feature">
+        <div class="ad-feature-inner">
+          <div class="ad-feature-icon">🏆</div>
+          <div class="ad-feature-body">
+            <div class="ad-feature-title">AB Education — Build Your Future Today</div>
+            <div class="ad-feature-chips">
+              <span class="chip gold">🥇 Top Ranked</span>
+              <span class="chip green">✅ 100% Placement</span>
+              <span class="chip blue">💻 Online & Offline</span>
+              <span class="chip">📜 Certified Courses</span>
+              <span class="chip">🌟 Industry Expert Faculty</span>
+            </div>
+          </div>
+          <a href="#" class="ad-enroll-btn" onclick="adClick(event)">Join Now</a>
+        </div>
+      </div>
+      <div class="ad-progress"><div class="ad-progress-fill" id="prog2"></div></div>
+    </div>
+
+    <!-- AD 3: Alert Ticker -->
+    <div class="ad" id="ad3">
+      <div class="ad-ticker">
+        <div class="ticker-badge">🔥 Urgent</div>
+        <div class="ticker-text">
+          <span>Last Few Seats!</span> AB Education Batch Starting Soon — Don't Miss Out!
+        </div>
+        <a href="#" class="ad-enroll-btn" onclick="adClick(event)">Book Seat</a>
+      </div>
+      <div class="ad-progress"><div class="ad-progress-fill" id="prog3"></div></div>
+    </div>
+
+    <!-- AD 4: Ribbon -->
+    <div class="ad" id="ad4">
+      <div class="ad-ribbon">
+        <span class="ribbon-icon">🎁</span>
+        <div class="ribbon-text">
+          AB Education — <em>50% Scholarship Available!</em> Limited Time Offer for New Students
+        </div>
+        <button class="ribbon-btn" onclick="adClick(event)">Claim Now</button>
+      </div>
+      <div class="ad-progress"><div class="ad-progress-fill" id="prog4"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- AD 5: Full Popup -->
+<div class="ad-popup" id="adPopup">
+  <div class="popup-card">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+    <div class="popup-emoji">🎓</div>
+    <div class="popup-title">AB Education</div>
+    <div class="popup-sub">Transform your career with India's most trusted education platform. Expert faculty, real placements, certified courses.</div>
+    <div class="popup-feats">
+      <div class="popup-feat">
+        <div class="popup-feat-icon">🏆</div>
+        <span>Top Ranked Institution — Recognized Nationwide</span>
+      </div>
+      <div class="popup-feat">
+        <div class="popup-feat-icon">💼</div>
+        <span>100% Placement Support with Top Companies</span>
+      </div>
+      <div class="popup-feat">
+        <div class="popup-feat-icon">📚</div>
+        <span>50+ Courses — Tech, Business, Design & More</span>
+      </div>
+      <div class="popup-feat">
+        <div class="popup-feat-icon">🎁</div>
+        <span>Up to 50% Scholarship for Eligible Students</span>
+      </div>
+      <div class="popup-feat">
+        <div class="popup-feat-icon">⭐</div>
+        <span>Industry Expert Faculty — Learn from the Best</span>
+      </div>
+    </div>
+    <button class="popup-cta" onclick="adClick(event)">🚀 Enroll Now — Limited Seats!</button>
+    <div class="popup-disclaimer">AB Education — AB GROUPS Flagship Initiative | Transforming Lives Through Learning</div>
+  </div>
+</div>
+
+<script>
+  // ===== URL SHORTENER =====
+  let history = [];
+  let currentShortURL = '';
+
+  async function shortenURL() {
+    const input = document.getElementById('urlInput');
+    const url = input.value.trim();
+
+    if (!url) { showError('Please enter a URL!'); return; }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      showError('URL must start with http:// or https://');
+      return;
+    }
+
+    hideAll();
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('shortenBtn').disabled = true;
+
+    try {
+      // TinyURL real API call
+      const apiURL = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`;
+      const response = await fetch(apiURL);
+
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+      const shortURL = await response.text();
+
+      if (!shortURL.startsWith('http')) throw new Error('Invalid response from TinyURL');
+
+      currentShortURL = shortURL.trim();
+      showResult(currentShortURL);
+      addToHistory(url, currentShortURL);
+
+    } catch (err) {
+      console.error(err);
+      showError(`Failed: ${err.message}. Check your internet connection.`);
+    } finally {
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('shortenBtn').disabled = false;
+    }
+  }
+
+  function showResult(shortURL) {
+    const box = document.getElementById('resultBox');
+    const link = document.getElementById('shortLink');
+    link.href = shortURL;
+    link.textContent = shortURL;
+    box.classList.add('show');
+  }
+
+  function hideAll() {
+    document.getElementById('resultBox').classList.remove('show');
+    document.getElementById('errorBox').classList.remove('show');
+    document.getElementById('errorBox').textContent = '';
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('errorBox');
+    box.textContent = '⚠ ' + msg;
+    box.classList.add('show');
+  }
+
+  function copyLink() {
+    if (!currentShortURL) return;
+    navigator.clipboard.writeText(currentShortURL).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      showToast('✓ Copied to clipboard!');
+      setTimeout(() => {
+        btn.textContent = '📋 Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    }).catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = currentShortURL;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('✓ Copied!');
+    });
+  }
+
+  function openLink() {
+    if (!currentShortURL) return;
+    window.open(currentShortURL, '_blank', 'noopener,noreferrer');
+  }
+
+  function addToHistory(original, short) {
+    history.unshift({ original, short, time: new Date() });
+    document.getElementById('statCount').textContent = history.length;
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    const empty = document.getElementById('historyEmpty');
+
+    if (history.length === 0) {
+      empty.style.display = 'block';
+      list.innerHTML = '';
+      list.appendChild(empty);
+      return;
+    }
+
+    empty.style.display = 'none';
+    list.innerHTML = '';
+
+    history.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerHTML = `
+        <span class="history-num">${i + 1}</span>
+        <div class="history-urls">
+          <a class="history-short" href="${item.short}" target="_blank" rel="noopener">${item.short}</a>
+          <div class="history-orig">${item.original}</div>
+        </div>
+        <div class="history-actions">
+          <button class="h-btn h-copy" onclick="histCopy(this, '${item.short}')">📋</button>
+          <a class="h-btn h-open" href="${item.short}" target="_blank" rel="noopener">↗</a>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function histCopy(btn, url) {
+    navigator.clipboard.writeText(url).then(() => {
+      btn.textContent = '✓';
+      btn.classList.add('copied');
+      showToast('✓ Copied!');
+      setTimeout(() => {
+        btn.textContent = '📋';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  function clearHistory() {
+    history = [];
+    document.getElementById('statCount').textContent = '0';
+    renderHistory();
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // Enter key
+  document.getElementById('urlInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') shortenURL();
+  });
+
+  // ===== AD SYSTEM =====
+  const ADS = ['ad1', 'ad2', 'ad3', 'ad4'];
+  let currentAd = -1;
+  let adTimer = null;
+  let progressTimer = null;
+  let adRotationCount = 0;
+  let adDuration = 0;
+  let progressStart = 0;
+
+  function showAd(index) {
+    // Hide all strip ads
+    ADS.forEach((id, i) => {
+      document.getElementById(id).classList.remove('active');
+    });
+
+    currentAd = index % ADS.length;
+    document.getElementById(ADS[currentAd]).classList.add('active');
+    document.getElementById('adContainer').style.display = 'block';
+
+    adRotationCount++;
+
+    // Show popup every 3rd rotation
+    if (adRotationCount % 3 === 0) {
+      setTimeout(showPopup, 500);
+    }
+
+    // Random duration 2–4 min
+    adDuration = (120 + Math.random() * 120) * 1000;
+    startProgress(ADS[currentAd].replace('ad', 'prog'));
+
+    clearTimeout(adTimer);
+    adTimer = setTimeout(nextAd, adDuration);
+  }
+
+  function startProgress(progId) {
+    clearInterval(progressTimer);
+    progressStart = Date.now();
+
+    const fill = document.getElementById(progId);
+    if (!fill) return;
+    fill.style.transform = 'scaleX(1)';
+
+    progressTimer = setInterval(() => {
+      const elapsed = Date.now() - progressStart;
+      const ratio = Math.max(0, 1 - elapsed / adDuration);
+      fill.style.transform = `scaleX(${ratio})`;
+      if (ratio <= 0) clearInterval(progressTimer);
+    }, 300);
+  }
+
+  function nextAd() {
+    clearTimeout(adTimer);
+    clearInterval(progressTimer);
+    showAd(currentAd + 1);
+  }
+
+  function showPopup() {
+    document.getElementById('adPopup').classList.add('show');
+  }
+
+  function closePopup() {
+    document.getElementById('adPopup').classList.remove('show');
+  }
+
+  function adClick(e) {
+    e.preventDefault();
+    // In production: redirect to AB Education site
+    showToast('🎓 Opening AB Education...');
+  }
+
+  // Start ads after 3 seconds
+  setTimeout(() => {
+    showAd(0);
+  }, 3000);
+</script>
+</body>
+</html>
